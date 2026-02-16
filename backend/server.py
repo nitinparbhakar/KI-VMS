@@ -376,7 +376,7 @@ async def get_visitor_slip(visitor_id: str):
     except Exception:
         pass
 
-    company_style = ParagraphStyle('CompanyName', fontName='Helvetica-Bold', fontSize=20, textColor=white, leading=24, spaceAfter=0)
+    company_style = ParagraphStyle('CompanyName', fontName='Helvetica-Bold', fontSize=18, textColor=white, leading=20, spaceAfter=0)
     loc_style = ParagraphStyle('CompanyLoc', fontName='Helvetica', fontSize=9, textColor=colors.HexColor('#cccccc'), leading=12)
     company_para = Paragraph("KING GROUP", company_style)
     loc_para = Paragraph("kinggroup.in", loc_style)
