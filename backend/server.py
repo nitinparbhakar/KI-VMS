@@ -393,6 +393,7 @@ async def get_visitor_slip(visitor_id: str):
         ('BOTTOMPADDING', (0, -1), (-1, -1), 3*mm),
         ('SPAN', (-1, 0), (-1, -1)),
         ('LINEBELOW', (0, -1), (-1, -1), 4, orange),
+        ('LINEABOVE', (0, 0), (-1, 0), 4, white),
     ]))
     elements.append(header_table)
 
