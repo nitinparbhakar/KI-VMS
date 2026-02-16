@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { Users, UserPlus, LogOut, Clock, ArrowRight, Shield } from "lucide-react";
 
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_workforce-entry-1/artifacts/tsvym70d_king_logo_9-removebg-preview.png";
+
 export default function Dashboard() {
   const [stats, setStats] = useState({ active_visitors: 0, today_visitors: 0, today_checkouts: 0, total_visitors: 0 });
   const [activeVisitors, setActiveVisitors] = useState([]);
