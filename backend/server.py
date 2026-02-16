@@ -382,15 +382,15 @@ async def get_visitor_slip(visitor_id: str):
     loc_para = Paragraph("kinggroup.in", loc_style)
 
     header_data = [[company_para, logo_cell], [loc_para, ""]]
-    header_table = Table(header_data, colWidths=[usable_w - 25*mm, 25*mm])
+    header_table = Table(header_data, colWidths=[usable_w - 22*mm, 22*mm])
     header_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), navy),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
-        ('RIGHTPADDING', (-1, 0), (-1, -1), 10*mm),
-        ('TOPPADDING', (0, 0), (-1, 0), 8*mm),
-        ('BOTTOMPADDING', (0, -1), (-1, -1), 4*mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8*mm),
+        ('RIGHTPADDING', (-1, 0), (-1, -1), 5*mm),
+        ('TOPPADDING', (0, 0), (-1, 0), 6*mm),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 3*mm),
         ('SPAN', (-1, 0), (-1, -1)),
         ('LINEBELOW', (0, -1), (-1, -1), 4, orange),
     ]))
