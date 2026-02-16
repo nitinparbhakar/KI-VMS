@@ -6,24 +6,33 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Camera, RefreshCw, UserPlus, Building2, Phone, User, Briefcase, Target, Check, X, FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Camera, RefreshCw, UserPlus, Building2, Phone, User, Briefcase, Target, Check, X, FileText, AlertTriangle, History, ShieldAlert } from "lucide-react";
 
 const PURPOSE_OPTIONS = ["Meeting", "Interview", "Delivery", "Vendor Visit", "Personal", "Audit", "Maintenance", "Other"];
+const LOGO_URL = "https://customer-assets.emergentagent.com/job_workforce-entry-1/artifacts/tsvym70d_king_logo_9-removebg-preview.png";
 
 export default function CheckIn() {
   const webcamRef = useRef(null);
+  const phoneInputRef = useRef(null);
   const [departments, setDepartments] = useState([]);
   const [hosts, setHosts] = useState([]);
   const [cameraReady, setCameraReady] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
+  const [phoneLookup, setPhoneLookup] = useState(null); // { found, name, company, visits, blacklisted }
+  const [lookingUp, setLookingUp] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [phoneEntered, setPhoneEntered] = useState(false);
   const [form, setForm] = useState({
     name: "", phone: "", company: "", purpose: "", department: "", host_id: "", host_name: "", host_email: ""
   });
 
   useEffect(() => {
     api.getDepartments().then(r => setDepartments(r.data.departments)).catch(() => {});
+    // Focus phone input on mount
+    setTimeout(() => phoneInputRef.current?.focus(), 300);
   }, []);
 
   useEffect(() => {
@@ -32,6 +41,40 @@ export default function CheckIn() {
       setForm(f => ({ ...f, host_id: "", host_name: "", host_email: "" }));
     }
   }, [form.department]);
+
+  // Phone lookup with debounce
+  useEffect(() => {
+    const cleaned = form.phone.replace(/\D/g, '');
+    if (cleaned.length < 10) {
+      setPhoneLookup(null);
+      setPhoneEntered(false);
+      return;
+    }
+    setPhoneEntered(true);
+    const timer = setTimeout(async () => {
+      setLookingUp(true);
+      try {
+        const res = await api.lookupPhone(form.phone);
+        setPhoneLookup(res.data);
+        if (res.data.found) {
+          setForm(f => ({
+            ...f,
+            name: f.name || res.data.name || "",
+            company: f.company || res.data.company || ""
+          }));
+          toast.info(`Returning visitor detected! Visit #${res.data.visit_count + 1}`);
+        }
+        if (res.data.blacklisted) {
+          toast.error(`BLACKLISTED VISITOR! ${res.data.blacklist_reason || ''}`);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLookingUp(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [form.phone]);
 
   const capturePhoto = useCallback(() => {
     if (webcamRef.current) {
@@ -55,8 +98,9 @@ export default function CheckIn() {
   };
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) return toast.error("Visitor name is required");
     if (!form.phone.trim() || form.phone.replace(/\D/g, '').length < 10) return toast.error("Valid phone number required (10 digits)");
+    if (phoneLookup?.blacklisted) return toast.error("Cannot check in a BLACKLISTED visitor!");
+    if (!form.name.trim()) return toast.error("Visitor name is required");
     if (!form.purpose) return toast.error("Purpose of visit is required");
     if (!form.department) return toast.error("Department is required");
     if (!form.host_id) return toast.error("Host person is required");
@@ -68,7 +112,8 @@ export default function CheckIn() {
       setSuccess(res.data);
       toast.success("Visitor checked in successfully!");
     } catch (e) {
-      toast.error(e.response?.data?.detail || "Check-in failed");
+      const detail = e.response?.data?.detail || "Check-in failed";
+      toast.error(detail);
     } finally {
       setSubmitting(false);
     }
@@ -78,7 +123,10 @@ export default function CheckIn() {
     setForm({ name: "", phone: "", company: "", purpose: "", department: "", host_id: "", host_name: "", host_email: "" });
     setCapturedPhoto(null);
     setSuccess(null);
+    setPhoneLookup(null);
+    setPhoneEntered(false);
     setCameraReady(false);
+    setTimeout(() => phoneInputRef.current?.focus(), 300);
   };
 
   // Success screen
@@ -147,10 +195,10 @@ export default function CheckIn() {
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center gap-3">
-          <UserPlus className="w-6 h-6 text-blue-400" />
+          <img src={LOGO_URL} alt="King Group" className="w-9 h-9 object-contain" />
           <div>
             <h1 className="font-heading font-black text-lg tracking-tight uppercase">Visitor Check-In</h1>
-            <p className="text-slate-400 text-xs">Capture photo & register visitor</p>
+            <p className="text-slate-400 text-xs">King Group - Capture photo & register visitor</p>
           </div>
         </div>
       </div>
@@ -237,138 +285,227 @@ export default function CheckIn() {
               </h3>
 
               <div className="space-y-4">
-                {/* Name & Phone */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
-                      <User className="w-3.5 h-3.5" /> Name <span className="text-red-500">*</span>
-                    </Label>
+                {/* PHONE FIRST */}
+                <div>
+                  <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
+                    <Phone className="w-3.5 h-3.5" /> Mobile Number <span className="text-red-500">*</span>
+                    <span className="text-xs text-slate-400 font-normal ml-1">(Enter first to check returning visitor)</span>
+                  </Label>
+                  <div className="relative">
                     <Input
-                      value={form.name}
-                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="Visitor full name"
-                      data-testid="input-name"
-                      className="h-14 text-lg border-2 border-slate-200 focus:border-blue-600 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
-                      <Phone className="w-3.5 h-3.5" /> Phone <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
+                      ref={phoneInputRef}
                       value={form.phone}
                       onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                       placeholder="10-digit mobile number"
                       type="tel"
                       data-testid="input-phone"
-                      className="h-14 text-lg border-2 border-slate-200 focus:border-blue-600 rounded-lg"
+                      className={`h-14 text-lg border-2 rounded-lg pr-12 ${
+                        phoneLookup?.blacklisted ? 'border-red-500 bg-red-50' :
+                        phoneLookup?.found ? 'border-emerald-500 bg-emerald-50' :
+                        'border-slate-200 focus:border-blue-600'
+                      }`}
                     />
+                    {lookingUp && (
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                        <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Company */}
-                <div>
-                  <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
-                    <Building2 className="w-3.5 h-3.5" /> Company
-                  </Label>
-                  <Input
-                    value={form.company}
-                    onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
-                    placeholder="Company / Organization"
-                    data-testid="input-company"
-                    className="h-14 text-lg border-2 border-slate-200 focus:border-blue-600 rounded-lg"
-                  />
-                </div>
-
-                {/* Purpose */}
-                <div>
-                  <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
-                    <Target className="w-3.5 h-3.5" /> Purpose <span className="text-red-500">*</span>
-                  </Label>
-                  <Select value={form.purpose} onValueChange={v => setForm(f => ({ ...f, purpose: v }))}>
-                    <SelectTrigger className="h-14 text-lg border-2 border-slate-200" data-testid="select-purpose">
-                      <SelectValue placeholder="Select purpose of visit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PURPOSE_OPTIONS.map(p => (
-                        <SelectItem key={p} value={p} className="text-base py-3">{p}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Department -> Host Cascade */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
-                      <Briefcase className="w-3.5 h-3.5" /> Department <span className="text-red-500">*</span>
-                    </Label>
-                    <Select value={form.department} onValueChange={v => setForm(f => ({ ...f, department: v }))}>
-                      <SelectTrigger className="h-14 text-lg border-2 border-slate-200" data-testid="select-department">
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments.map(d => (
-                          <SelectItem key={d} value={d} className="text-base py-3">{d}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                {/* Blacklisted Warning */}
+                {phoneLookup?.blacklisted && (
+                  <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3" data-testid="blacklist-warning">
+                    <ShieldAlert className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-heading font-bold text-red-800 text-sm">BLACKLISTED VISITOR</p>
+                      <p className="text-red-600 text-xs mt-1">
+                        {phoneLookup.blacklist_name && <span className="font-semibold">{phoneLookup.blacklist_name}: </span>}
+                        {phoneLookup.blacklist_reason || "This number is blocked from entry."}
+                      </p>
+                      <p className="text-red-500 text-xs mt-1 font-semibold">Check-in is NOT allowed for this visitor.</p>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
-                      <User className="w-3.5 h-3.5" /> Host Person <span className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      value={form.host_id}
-                      onValueChange={selectHost}
-                      disabled={!form.department}
-                    >
-                      <SelectTrigger className="h-14 text-lg border-2 border-slate-200" data-testid="select-host">
-                        <SelectValue placeholder={form.department ? "Select host" : "Select department first"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {hosts.map(h => (
-                          <SelectItem key={h.id} value={h.id} className="text-base py-3">
-                            {h.name}
-                          </SelectItem>
-                        ))}
-                        {hosts.length === 0 && form.department && (
-                          <div className="p-3 text-sm text-slate-400 text-center">No hosts in this department</div>
-                        )}
-                      </SelectContent>
-                    </Select>
+                )}
+
+                {/* Returning Visitor Badge */}
+                {phoneLookup?.found && !phoneLookup?.blacklisted && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3" data-testid="returning-visitor-info">
+                    <History className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-heading font-bold text-emerald-800 text-sm">RETURNING VISITOR</p>
+                        <Badge className="bg-emerald-200 text-emerald-900 border-emerald-300 text-[10px]">
+                          Visit #{phoneLookup.visit_count + 1}
+                        </Badge>
+                      </div>
+                      <p className="text-emerald-700 text-xs mt-1">
+                        Name & company auto-filled from previous visit.
+                      </p>
+                      <button
+                        onClick={() => setShowHistory(true)}
+                        data-testid="view-history-btn"
+                        className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                      >
+                        <History className="w-3 h-3" /> View Previous Visits ({phoneLookup.visit_count})
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Name & Company - shown after phone is entered */}
+                {phoneEntered && !phoneLookup?.blacklisted && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
+                          <User className="w-3.5 h-3.5" /> Name <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          value={form.name}
+                          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                          placeholder="Visitor full name"
+                          data-testid="input-name"
+                          className="h-14 text-lg border-2 border-slate-200 focus:border-blue-600 rounded-lg"
+                        />
+                      </div>
+                      <div>
+                        <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
+                          <Building2 className="w-3.5 h-3.5" /> Company
+                        </Label>
+                        <Input
+                          value={form.company}
+                          onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
+                          placeholder="Company / Organization"
+                          data-testid="input-company"
+                          className="h-14 text-lg border-2 border-slate-200 focus:border-blue-600 rounded-lg"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Purpose */}
+                    <div>
+                      <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
+                        <Target className="w-3.5 h-3.5" /> Purpose <span className="text-red-500">*</span>
+                      </Label>
+                      <Select value={form.purpose} onValueChange={v => setForm(f => ({ ...f, purpose: v }))}>
+                        <SelectTrigger className="h-14 text-lg border-2 border-slate-200" data-testid="select-purpose">
+                          <SelectValue placeholder="Select purpose of visit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PURPOSE_OPTIONS.map(p => (
+                            <SelectItem key={p} value={p} className="text-base py-3">{p}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Department -> Host Cascade */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
+                          <Briefcase className="w-3.5 h-3.5" /> Department <span className="text-red-500">*</span>
+                        </Label>
+                        <Select value={form.department} onValueChange={v => setForm(f => ({ ...f, department: v }))}>
+                          <SelectTrigger className="h-14 text-lg border-2 border-slate-200" data-testid="select-department">
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {departments.map(d => (
+                              <SelectItem key={d} value={d} className="text-base py-3">{d}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="font-body font-semibold text-slate-900 text-sm flex items-center gap-1.5 mb-1.5">
+                          <User className="w-3.5 h-3.5" /> Host Person <span className="text-red-500">*</span>
+                        </Label>
+                        <Select
+                          value={form.host_id}
+                          onValueChange={selectHost}
+                          disabled={!form.department}
+                        >
+                          <SelectTrigger className="h-14 text-lg border-2 border-slate-200" data-testid="select-host">
+                            <SelectValue placeholder={form.department ? "Select host" : "Select department first"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hosts.map(h => (
+                              <SelectItem key={h.id} value={h.id} className="text-base py-3">
+                                {h.name}
+                              </SelectItem>
+                            ))}
+                            {hosts.length === 0 && form.department && (
+                              <div className="p-3 text-sm text-slate-400 text-center">No hosts in this department</div>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Submit */}
-              <div className="mt-6 pt-5 border-t border-slate-100">
-                {!capturedPhoto && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2" data-testid="photo-required-warning">
-                    <X className="w-4 h-4 text-red-500 flex-shrink-0" />
-                    <p className="text-red-700 text-sm font-medium">Photo capture is mandatory before submitting</p>
-                  </div>
-                )}
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting || !capturedPhoto}
-                  data-testid="submit-checkin-btn"
-                  className="w-full h-16 flex items-center justify-center gap-3 bg-blue-600 text-white rounded-xl font-heading font-black text-lg tracking-tight hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg shadow-blue-600/20"
-                >
-                  {submitting ? (
-                    <RefreshCw className="w-6 h-6 animate-spin" />
-                  ) : (
-                    <>
-                      <Check className="w-6 h-6" />
-                      REGISTER VISITOR
-                    </>
+              {phoneEntered && !phoneLookup?.blacklisted && (
+                <div className="mt-6 pt-5 border-t border-slate-100">
+                  {!capturedPhoto && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center gap-2" data-testid="photo-required-warning">
+                      <X className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      <p className="text-red-700 text-sm font-medium">Photo capture is mandatory before submitting</p>
+                    </div>
                   )}
-                </button>
-              </div>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting || !capturedPhoto}
+                    data-testid="submit-checkin-btn"
+                    className="w-full h-16 flex items-center justify-center gap-3 bg-blue-600 text-white rounded-xl font-heading font-black text-lg tracking-tight hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+                  >
+                    {submitting ? (
+                      <RefreshCw className="w-6 h-6 animate-spin" />
+                    ) : (
+                      <>
+                        <Check className="w-6 h-6" />
+                        REGISTER VISITOR
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Previous Visits History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" data-testid="history-dialog">
+          <DialogHeader>
+            <DialogTitle className="font-heading font-black text-lg">PREVIOUS VISITS</DialogTitle>
+            <DialogDescription>Visit history for {phoneLookup?.name || form.phone}</DialogDescription>
+          </DialogHeader>
+          {phoneLookup?.visits && (
+            <div className="space-y-3 pt-2">
+              {phoneLookup.visits.map((v, i) => (
+                <div key={v.visitor_id} className="bg-slate-50 rounded-xl p-4 border border-slate-100" data-testid={`history-visit-${i}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-xs text-blue-600 font-medium">{v.visitor_id}</span>
+                    <Badge className={`text-[10px] font-bold px-2 ${v.status === "IN" ? "bg-emerald-100 text-emerald-800 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>
+                      {v.status}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-slate-400">Purpose:</span> <span className="text-slate-700 font-medium">{v.purpose}</span></div>
+                    <div><span className="text-slate-400">Host:</span> <span className="text-slate-700 font-medium">{v.host_name}</span></div>
+                    <div><span className="text-slate-400">Dept:</span> <span className="text-slate-700 font-medium">{v.department}</span></div>
+                    <div><span className="text-slate-400">In:</span> <span className="text-slate-700 font-medium">{new Date(v.in_time).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
