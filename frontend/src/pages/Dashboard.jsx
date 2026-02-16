@@ -46,8 +46,8 @@ export default function Dashboard() {
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-6 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
-              <Shield className="w-7 h-7 text-blue-400" />
+            <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm overflow-hidden">
+              <img src={LOGO_URL} alt="King Group" className="w-10 h-10 object-contain" />
             </div>
             <div>
               <h1 className="font-heading font-black text-xl tracking-tight uppercase" data-testid="dashboard-title">
