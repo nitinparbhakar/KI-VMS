@@ -371,7 +371,7 @@ async def get_visitor_slip(visitor_id: str):
     logo_cell = ""
     try:
         if logo_path.exists():
-            logo_img = Image(str(logo_path), width=18*mm, height=18*mm)
+            logo_img = Image(str(logo_path), width=24*mm, height=24*mm)
             logo_cell = logo_img
     except Exception:
         pass
