@@ -1,61 +1,43 @@
 # King Group Visitor Management System - PRD
 
 ## Original Problem Statement
-Build a zero-cost Visitor Management System for King Group (kinggroup.in). Security guards at gate use Android tablets to check-in/out visitors. Features: live camera photo capture, visitor registration, Department->Host cascading dropdown, printable PDF visitor slip, email notification to host, visitor log with search, admin panel.
+Build a zero-cost Visitor Management System for King Group (kinggroup.in). Security guards at gate use Android tablets to check-in/out visitors with live camera capture, phone-first workflow, returning visitor detection, blacklist system, and professional gate pass PDF.
 
 ## Architecture
 - **Frontend**: React + Tailwind CSS + Shadcn UI + react-webcam
-- **Backend**: FastAPI + MongoDB + ReportLab (PDF)
-- **Database**: MongoDB (visitors, hosts, audit_log, email_log collections)
+- **Backend**: FastAPI + MongoDB + ReportLab + qrcode
+- **Database**: MongoDB (visitors, hosts, blacklist, audit_log, email_log)
 - **Auth**: None (open access for trusted tablets)
 
-## User Personas
-1. **Security Guard**: Primary user. Uses tablet at gate. Needs fast, minimal-typing workflow with large touch targets.
-2. **Company Admin**: Manages hosts, reviews logs and audit trail.
-
-## Core Requirements
-- Live camera photo capture (getUserMedia, NO file picker)
-- Phone number as primary key for visitor matching
-- Visitor ID format: VIS-YYYYMMDD-####
-- Department -> Host cascading selection
-- Auto-timestamp on check-in/out
-- PDF visitor slip (A4)
-- Email notification to host (currently MOCKED)
-- Audit trail
-
 ## What's Been Implemented (Feb 16, 2026)
-- [x] Full-stack Visitor Management System
-- [x] Dashboard with stats, active visitors, quick actions
+### Phase 1 (MVP)
+- [x] Dashboard with stats, active visitors, quick actions, King Group logo
 - [x] Check-In page with live camera capture + form
-- [x] Check-Out page with search and confirmation dialog
+- [x] Check-Out page with search and confirmation
 - [x] Visitor Log with search/filter/pagination
 - [x] Admin Panel (Hosts CRUD, Audit Log, Email Log)
 - [x] PDF visitor slip generation
-- [x] 17 seeded host employees across 11 departments
-- [x] Phone normalization (+91 format)
-- [x] Audit logging for all check-in/out events
+- [x] 17 seeded hosts across 11 departments
+
+### Phase 2 (Current)
+- [x] **Phone-first workflow**: Phone entered before name, form revealed after 10+ digits
+- [x] **Returning visitor detection**: Auto-fill name/company from previous visits
+- [x] **Previous visits history**: Dialog showing all past visits for a phone number
+- [x] **Blacklist system**: Admin can blacklist phone numbers with reasons, blocked visitors cannot check in
+- [x] **King Group logo**: Used in dashboard, check-in, admin headers
+- [x] **Redesigned gate pass PDF**: Navy/orange theme matching template, QR code, visitor photo, signature fields, instructions
 
 ## MOCKED Features
-- Email notifications (logged to email_log collection, not sent via real email service)
+- Email notifications (logged to email_log collection)
 
 ## Prioritized Backlog
-### P0 (Critical)
-- None remaining
+### P1
+- Real email integration (SendGrid)
+- QR code scanning for quick checkout
+- Daily visitor summary report
 
-### P1 (Important)
-- Real email integration (SendGrid or similar)
-- Returning visitor auto-fill (detect by phone number)
-- QR code on visitor slip for quick checkout
-
-### P2 (Nice to Have)
-- Daily summary report
-- Offline mode handling
-- Kiosk mode guidance for tablet setup
-- Export visitor log to CSV/Excel
-- Visitor analytics dashboard
-
-## Next Tasks
-1. Integrate real email service (SendGrid recommended)
-2. Add returning visitor detection and auto-fill
-3. Add QR code to PDF slip for quick gate-out
-4. Add daily visitor summary report
+### P2
+- Offline mode / PWA
+- Export visitor log to CSV
+- Visitor analytics charts
+- Kiosk mode tablet setup guide
