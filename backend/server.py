@@ -528,8 +528,8 @@ async def get_visitor_slip(visitor_id: str):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0f7ff')),
         ('BOX', (0, 0), (-1, -1), 1, border_gray),
-        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
-        ('RIGHTPADDING', (-1, 0), (-1, -1), 15*mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5*mm),
+        ('RIGHTPADDING', (-1, 0), (-1, -1), 5*mm),
     ]))
     elements.append(visual_table)
     elements.append(Spacer(1, 4*mm))
