@@ -296,12 +296,17 @@ async def get_visitor_slip(visitor_id: str):
     # Photo
     if visitor.get("photo"):
         try:
+            from PIL import Image as PILImage
             photo_data = visitor["photo"]
             if "," in photo_data:
                 photo_data = photo_data.split(",")[1]
             img_bytes = base64.b64decode(photo_data)
-            img_buf = io.BytesIO(img_bytes)
-            img = Image(img_buf, width=4*cm, height=4*cm)
+            pil_img = PILImage.open(io.BytesIO(img_bytes))
+            pil_img = pil_img.convert("RGB")
+            clean_buf = io.BytesIO()
+            pil_img.save(clean_buf, format="PNG")
+            clean_buf.seek(0)
+            img = Image(clean_buf, width=4*cm, height=4*cm)
             img.hAlign = 'CENTER'
             elements.append(img)
             elements.append(Spacer(1, 6*mm))
