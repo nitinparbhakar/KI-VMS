@@ -493,7 +493,7 @@ async def get_visitor_slip(visitor_id: str):
             clean_buf_photo = io.BytesIO()
             pil_img.save(clean_buf_photo, format="PNG")
             clean_buf_photo.seek(0)
-            photo_img = Image(clean_buf_photo, width=25*mm, height=25*mm)
+            photo_img = Image(clean_buf_photo, width=22*mm, height=22*mm)
         except Exception as e:
             logger.error(f"Photo error: {e}")
 
