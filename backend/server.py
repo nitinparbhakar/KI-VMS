@@ -425,7 +425,7 @@ async def get_visitor_slip(visitor_id: str):
         section_title_data = [[Paragraph(title, sect_style)]]
         section_title_table = Table(section_title_data, colWidths=[usable_w])
         section_title_table.setStyle(TableStyle([
-            ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+            ('LEFTPADDING', (0, 0), (-1, -1), 3*mm),
             ('LINEBELOW', (0, 0), (-1, -1), 1.5, orange),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
         ]))
@@ -443,9 +443,9 @@ async def get_visitor_slip(visitor_id: str):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('TOPPADDING', (0, 0), (-1, -1), 3*mm),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 3*mm),
-            ('LEFTPADDING', (0, 0), (0, -1), 15*mm),
-            ('LEFTPADDING', (1, 0), (1, -1), 5*mm),
-            ('RIGHTPADDING', (-1, 0), (-1, -1), 10*mm),
+            ('LEFTPADDING', (0, 0), (0, -1), 3*mm),
+            ('LEFTPADDING', (1, 0), (1, -1), 3*mm),
+            ('RIGHTPADDING', (-1, 0), (-1, -1), 3*mm),
         ]
         for i in range(len(table_data)):
             bg = light_blue if i % 2 == 0 else light_gray
