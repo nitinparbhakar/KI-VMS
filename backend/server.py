@@ -418,9 +418,9 @@ async def get_visitor_slip(visitor_id: str):
     elements.append(Spacer(1, 2*mm))
 
     # ── Section Helper ──
-    sect_style = ParagraphStyle('SectionTitle', fontName='Helvetica-Bold', fontSize=11, textColor=navy, spaceBefore=3*mm, spaceAfter=2*mm, leading=14)
-    label_style = ParagraphStyle('Label', fontName='Helvetica-Bold', fontSize=10, textColor=dark, leading=14)
-    value_style = ParagraphStyle('Value', fontName='Helvetica', fontSize=10, textColor=colors.HexColor('#444444'), leading=14)
+    sect_style = ParagraphStyle('SectionTitle', fontName='Helvetica-Bold', fontSize=10, textColor=navy, spaceBefore=1*mm, spaceAfter=1*mm, leading=12)
+    label_style = ParagraphStyle('Label', fontName='Helvetica-Bold', fontSize=9, textColor=dark, leading=12)
+    value_style = ParagraphStyle('Value', fontName='Helvetica', fontSize=9, textColor=colors.HexColor('#444444'), leading=12)
 
     def make_section(title, rows):
         section_title_data = [[Paragraph(title, sect_style)]]
@@ -428,10 +428,10 @@ async def get_visitor_slip(visitor_id: str):
         section_title_table.setStyle(TableStyle([
             ('LEFTPADDING', (0, 0), (-1, -1), 3*mm),
             ('LINEBELOW', (0, 0), (-1, -1), 1.5, orange),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1*mm),
         ]))
         elements.append(section_title_table)
-        elements.append(Spacer(1, 2*mm))
+        elements.append(Spacer(1, 1*mm))
 
         table_data = []
         for lbl, val in rows:
@@ -442,8 +442,8 @@ async def get_visitor_slip(visitor_id: str):
         info_table = Table(table_data, colWidths=[col1, col2])
         row_styles = [
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 3*mm),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3*mm),
+            ('TOPPADDING', (0, 0), (-1, -1), 2*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
             ('LEFTPADDING', (0, 0), (0, -1), 3*mm),
             ('LEFTPADDING', (1, 0), (1, -1), 3*mm),
             ('RIGHTPADDING', (-1, 0), (-1, -1), 3*mm),
