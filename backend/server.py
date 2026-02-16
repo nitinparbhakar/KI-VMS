@@ -592,11 +592,10 @@ async def get_visitor_slip(visitor_id: str):
     instr_table = Table(instr_items, colWidths=[usable_w])
     instr_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fff8e1')),
-        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 10*mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5*mm),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5*mm),
         ('TOPPADDING', (0, 0), (0, 0), 3*mm),
         ('BOTTOMPADDING', (0, -1), (0, -1), 3*mm),
-        ('LINEBELOW', (0, -1), (-1, -1), 0, white),
     ]))
     elements.append(instr_table)
     elements.append(Spacer(1, 3*mm))
