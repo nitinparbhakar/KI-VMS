@@ -533,10 +533,10 @@ async def get_visitor_slip(visitor_id: str):
         ('RIGHTPADDING', (-1, 0), (-1, -1), 5*mm),
     ]))
     elements.append(visual_table)
-    elements.append(Spacer(1, 4*mm))
+    elements.append(Spacer(1, 2*mm))
 
     # ── Authorization & Signatures ──
-    sig_label = ParagraphStyle('SigLabel', fontName='Helvetica-Bold', fontSize=9, textColor=dark, leading=12)
+    sig_label = ParagraphStyle('SigLabel', fontName='Helvetica-Bold', fontSize=8, textColor=dark, leading=11)
     sig_sect_data = [[Paragraph("Authorization &amp; Records", sect_style)]]
     sig_sect_table = Table(sig_sect_data, colWidths=[usable_w])
     sig_sect_table.setStyle(TableStyle([
