@@ -398,10 +398,10 @@ async def get_visitor_slip(visitor_id: str):
     elements.append(header_table)
 
     # ── Title: GATE PASS ──
-    title_style = ParagraphStyle('GatePassTitle', fontName='Helvetica-Bold', fontSize=32, textColor=navy, alignment=TA_CENTER, spaceAfter=2*mm, spaceBefore=5*mm, leading=38)
-    pass_num_style = ParagraphStyle('PassNum', fontName='Courier', fontSize=11, textColor=gray, alignment=TA_CENTER, spaceAfter=3*mm)
+    title_style = ParagraphStyle('GatePassTitle', fontName='Helvetica-Bold', fontSize=24, textColor=navy, alignment=TA_CENTER, spaceAfter=1*mm, spaceBefore=2*mm, leading=28)
+    pass_num_style = ParagraphStyle('PassNum', fontName='Courier', fontSize=10, textColor=gray, alignment=TA_CENTER, spaceAfter=1*mm)
 
-    elements.append(Spacer(1, 3*mm))
+    elements.append(Spacer(1, 1*mm))
     title_table_data = [
         [Paragraph("GATE PASS", title_style)],
         [Paragraph(f"ID: {visitor_id}", pass_num_style)]
@@ -410,12 +410,12 @@ async def get_visitor_slip(visitor_id: str):
     title_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f7fa')),
-        ('TOPPADDING', (0, 0), (0, 0), 5*mm),
-        ('BOTTOMPADDING', (0, -1), (0, -1), 3*mm),
+        ('TOPPADDING', (0, 0), (0, 0), 3*mm),
+        ('BOTTOMPADDING', (0, -1), (0, -1), 2*mm),
         ('LINEBELOW', (0, -1), (-1, -1), 2, navy),
     ]))
     elements.append(title_table)
-    elements.append(Spacer(1, 5*mm))
+    elements.append(Spacer(1, 2*mm))
 
     # ── Section Helper ──
     sect_style = ParagraphStyle('SectionTitle', fontName='Helvetica-Bold', fontSize=11, textColor=navy, spaceBefore=3*mm, spaceAfter=2*mm, leading=14)
