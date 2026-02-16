@@ -539,7 +539,7 @@ async def get_visitor_slip(visitor_id: str):
     sig_sect_data = [[Paragraph("Authorization &amp; Records", sect_style)]]
     sig_sect_table = Table(sig_sect_data, colWidths=[usable_w])
     sig_sect_table.setStyle(TableStyle([
-        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3*mm),
         ('LINEBELOW', (0, 0), (-1, -1), 1.5, orange),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
     ]))
