@@ -510,8 +510,8 @@ async def get_visitor_slip(visitor_id: str):
     except Exception as e:
         logger.error(f"QR error: {e}")
 
-    qr_label_style = ParagraphStyle('QRLabel', fontName='Helvetica-Bold', fontSize=9, textColor=navy, alignment=TA_CENTER, spaceAfter=2*mm)
-    vid_style = ParagraphStyle('VID', fontName='Courier-Bold', fontSize=10, textColor=navy, alignment=TA_CENTER, spaceBefore=2*mm)
+    qr_label_style = ParagraphStyle('QRLabel', fontName='Helvetica-Bold', fontSize=8, textColor=navy, alignment=TA_CENTER, spaceAfter=1*mm)
+    vid_style = ParagraphStyle('VID', fontName='Courier-Bold', fontSize=9, textColor=navy, alignment=TA_CENTER, spaceBefore=1*mm)
 
     photo_cell = photo_img if photo_img else Paragraph("No Photo", ParagraphStyle('NP', fontSize=8, alignment=TA_CENTER, textColor=gray))
     qr_cell = qr_img if qr_img else Paragraph("No QR", ParagraphStyle('NQ', fontSize=8, alignment=TA_CENTER, textColor=gray))
