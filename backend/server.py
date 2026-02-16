@@ -333,7 +333,7 @@ async def get_visitor_photo(visitor_id: str):
         raise HTTPException(status_code=404, detail="Photo not found")
     return {"photo": visitor["photo"]}
 
-# ── PDF Slip Generation ──
+# ── PDF Slip Generation (Gate Pass Template) ──
 @api_router.get("/visitors/{visitor_id}/slip")
 async def get_visitor_slip(visitor_id: str):
     visitor = await db.visitors.find_one({"visitor_id": visitor_id}, {"_id": 0})
@@ -345,92 +345,265 @@ async def get_visitor_slip(visitor_id: str):
     from reportlab.lib import colors
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+    from PIL import Image as PILImage
+    import qrcode
 
+    PAGE_W, PAGE_H = A4
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=1.5*cm, bottomMargin=1.5*cm, leftMargin=2*cm, rightMargin=2*cm)
-    styles = getSampleStyleSheet()
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=0, bottomMargin=0, leftMargin=0, rightMargin=0)
     elements = []
 
-    # Title style
-    title_style = ParagraphStyle('Title', parent=styles['Title'], fontSize=24, spaceAfter=6, textColor=colors.HexColor('#0F172A'), fontName='Helvetica-Bold')
-    subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=10, textColor=colors.HexColor('#64748B'), alignment=TA_CENTER, spaceAfter=12)
-    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=12, textColor=colors.HexColor('#0F172A'), fontName='Helvetica-Bold', spaceAfter=4)
-    value_style = ParagraphStyle('Value', parent=styles['Normal'], fontSize=11, textColor=colors.HexColor('#334155'), spaceBefore=2, spaceAfter=8)
-    id_style = ParagraphStyle('ID', parent=styles['Normal'], fontSize=18, textColor=colors.HexColor('#2563EB'), fontName='Helvetica-Bold', alignment=TA_CENTER, spaceAfter=12)
+    navy = colors.HexColor('#003366')
+    orange = colors.HexColor('#ff6b35')
+    dark = colors.HexColor('#333333')
+    gray = colors.HexColor('#666666')
+    light_blue = colors.HexColor('#f0f7ff')
+    white = colors.HexColor('#FFFFFF')
+    light_gray = colors.HexColor('#fafafa')
+    border_gray = colors.HexColor('#e0e0e0')
 
-    # Company header
-    elements.append(Paragraph("KING GROUP", title_style))
-    elements.append(Paragraph("kinggroup.in | Visitor Management System", subtitle_style))
+    usable_w = PAGE_W - 40*mm
+
+    # ── Header with Logo ──
+    logo_path = ROOT_DIR / "king_logo.png"
+    logo_cell = ""
+    try:
+        if logo_path.exists():
+            logo_img = Image(str(logo_path), width=18*mm, height=18*mm)
+            logo_cell = logo_img
+    except Exception:
+        pass
+
+    company_style = ParagraphStyle('CompanyName', fontName='Helvetica-Bold', fontSize=20, textColor=white, leading=24, spaceAfter=0)
+    loc_style = ParagraphStyle('CompanyLoc', fontName='Helvetica', fontSize=9, textColor=colors.HexColor('#cccccc'), leading=12)
+    company_para = Paragraph("KING GROUP", company_style)
+    loc_para = Paragraph("kinggroup.in", loc_style)
+
+    header_data = [[company_para, logo_cell], [loc_para, ""]]
+    header_table = Table(header_data, colWidths=[usable_w - 25*mm, 25*mm])
+    header_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), navy),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+        ('RIGHTPADDING', (-1, 0), (-1, -1), 10*mm),
+        ('TOPPADDING', (0, 0), (-1, 0), 8*mm),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 4*mm),
+        ('SPAN', (-1, 0), (-1, -1)),
+        ('LINEBELOW', (0, -1), (-1, -1), 4, orange),
+    ]))
+    elements.append(header_table)
+
+    # ── Title: GATE PASS ──
+    title_style = ParagraphStyle('GatePassTitle', fontName='Helvetica-Bold', fontSize=32, textColor=navy, alignment=TA_CENTER, spaceAfter=2*mm, spaceBefore=5*mm, leading=38)
+    pass_num_style = ParagraphStyle('PassNum', fontName='Courier', fontSize=11, textColor=gray, alignment=TA_CENTER, spaceAfter=3*mm)
+
+    elements.append(Spacer(1, 3*mm))
+    title_table_data = [
+        [Paragraph("GATE PASS", title_style)],
+        [Paragraph(f"ID: {visitor_id}", pass_num_style)]
+    ]
+    title_table = Table(title_table_data, colWidths=[PAGE_W])
+    title_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f7fa')),
+        ('TOPPADDING', (0, 0), (0, 0), 5*mm),
+        ('BOTTOMPADDING', (0, -1), (0, -1), 3*mm),
+        ('LINEBELOW', (0, -1), (-1, -1), 2, navy),
+    ]))
+    elements.append(title_table)
+    elements.append(Spacer(1, 5*mm))
+
+    # ── Section Helper ──
+    sect_style = ParagraphStyle('SectionTitle', fontName='Helvetica-Bold', fontSize=11, textColor=navy, spaceBefore=3*mm, spaceAfter=2*mm, leading=14)
+    label_style = ParagraphStyle('Label', fontName='Helvetica-Bold', fontSize=10, textColor=dark, leading=14)
+    value_style = ParagraphStyle('Value', fontName='Helvetica', fontSize=10, textColor=colors.HexColor('#444444'), leading=14)
+
+    def make_section(title, rows):
+        section_title_data = [[Paragraph(title, sect_style)]]
+        section_title_table = Table(section_title_data, colWidths=[usable_w])
+        section_title_table.setStyle(TableStyle([
+            ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+            ('LINEBELOW', (0, 0), (-1, -1), 1.5, orange),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
+        ]))
+        elements.append(section_title_table)
+        elements.append(Spacer(1, 2*mm))
+
+        table_data = []
+        for lbl, val in rows:
+            table_data.append([Paragraph(lbl, label_style), Paragraph(str(val), value_style)])
+
+        col1 = usable_w * 0.35
+        col2 = usable_w * 0.65
+        info_table = Table(table_data, colWidths=[col1, col2])
+        row_styles = [
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3*mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3*mm),
+            ('LEFTPADDING', (0, 0), (0, -1), 15*mm),
+            ('LEFTPADDING', (1, 0), (1, -1), 5*mm),
+            ('RIGHTPADDING', (-1, 0), (-1, -1), 10*mm),
+        ]
+        for i in range(len(table_data)):
+            bg = light_blue if i % 2 == 0 else light_gray
+            row_styles.append(('BACKGROUND', (0, i), (0, i), bg))
+            row_styles.append(('BACKGROUND', (1, i), (1, i), light_gray))
+            if i < len(table_data) - 1:
+                row_styles.append(('LINEBELOW', (0, i), (-1, i), 0.5, border_gray))
+        info_table.setStyle(TableStyle(row_styles))
+        elements.append(info_table)
+
+    # ── Visitor Details ──
+    in_time_str = visitor.get("in_time", "")
+    try:
+        in_dt = datetime.fromisoformat(in_time_str)
+        in_display = in_dt.strftime("%d %b %Y, %I:%M %p")
+    except Exception:
+        in_display = in_time_str
+
+    make_section("Visitor Details", [
+        ("Visitor Name", visitor.get("name", "")),
+        ("Mobile Number", visitor.get("phone", "")),
+        ("Company/Organization", visitor.get("company", "N/A")),
+        ("Purpose of Visit", visitor.get("purpose", "")),
+    ])
+    elements.append(Spacer(1, 3*mm))
+
+    # ── Host Details ──
+    make_section("Host Details", [
+        ("Host Name", visitor.get("host_name", "")),
+        ("Department", visitor.get("department", "")),
+        ("Gate In Time", in_display),
+    ])
     elements.append(Spacer(1, 4*mm))
 
-    # Line separator
-    line_data = [['']]
-    line_table = Table(line_data, colWidths=[doc.width])
-    line_table.setStyle(TableStyle([('LINEBELOW', (0, 0), (-1, -1), 2, colors.HexColor('#0F172A'))]))
-    elements.append(line_table)
-    elements.append(Spacer(1, 6*mm))
-
-    # Visitor ID
-    elements.append(Paragraph(f"VISITOR PASS: {visitor_id}", id_style))
-    elements.append(Spacer(1, 4*mm))
-
-    # Photo
+    # ── Photo + QR Code side by side ──
+    photo_img = None
     if visitor.get("photo"):
         try:
-            from PIL import Image as PILImage
             photo_data = visitor["photo"]
             if "," in photo_data:
                 photo_data = photo_data.split(",")[1]
             img_bytes = base64.b64decode(photo_data)
-            pil_img = PILImage.open(io.BytesIO(img_bytes))
-            pil_img = pil_img.convert("RGB")
-            clean_buf = io.BytesIO()
-            pil_img.save(clean_buf, format="PNG")
-            clean_buf.seek(0)
-            img = Image(clean_buf, width=4*cm, height=4*cm)
-            img.hAlign = 'CENTER'
-            elements.append(img)
-            elements.append(Spacer(1, 6*mm))
+            pil_img = PILImage.open(io.BytesIO(img_bytes)).convert("RGB")
+            clean_buf_photo = io.BytesIO()
+            pil_img.save(clean_buf_photo, format="PNG")
+            clean_buf_photo.seek(0)
+            photo_img = Image(clean_buf_photo, width=30*mm, height=30*mm)
         except Exception as e:
-            logger.error(f"Error adding photo to PDF: {e}")
+            logger.error(f"Photo error: {e}")
 
-    # Visitor details table
-    in_time = visitor.get("in_time", "")
-    out_time = visitor.get("out_time", "N/A")
+    qr_img = None
+    try:
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=8, border=2)
+        qr.add_data(visitor_id)
+        qr.make(fit=True)
+        qr_pil = qr.make_image(fill_color="#003366", back_color="white").convert("RGB")
+        qr_buf = io.BytesIO()
+        qr_pil.save(qr_buf, format="PNG")
+        qr_buf.seek(0)
+        qr_img = Image(qr_buf, width=30*mm, height=30*mm)
+    except Exception as e:
+        logger.error(f"QR error: {e}")
 
-    detail_data = [
-        ["Visitor Name", visitor.get("name", "")],
-        ["Phone", visitor.get("phone", "")],
-        ["Company", visitor.get("company", "N/A")],
-        ["Purpose", visitor.get("purpose", "")],
-        ["Department", visitor.get("department", "")],
-        ["Host", visitor.get("host_name", "")],
-        ["Check-In", in_time],
-        ["Check-Out", out_time if out_time else "Still Inside"],
-        ["Status", visitor.get("status", "")],
-        ["Visit #", str(visitor.get("visit_count", 1))],
+    qr_label_style = ParagraphStyle('QRLabel', fontName='Helvetica-Bold', fontSize=9, textColor=navy, alignment=TA_CENTER, spaceAfter=2*mm)
+    vid_style = ParagraphStyle('VID', fontName='Courier-Bold', fontSize=10, textColor=navy, alignment=TA_CENTER, spaceBefore=2*mm)
+
+    photo_cell = photo_img if photo_img else Paragraph("No Photo", ParagraphStyle('NP', fontSize=8, alignment=TA_CENTER, textColor=gray))
+    qr_cell = qr_img if qr_img else Paragraph("No QR", ParagraphStyle('NQ', fontSize=8, alignment=TA_CENTER, textColor=gray))
+
+    visual_data = [
+        [Paragraph("Visitor Photo", qr_label_style), Paragraph("Quick Verification Code", qr_label_style)],
+        [photo_cell, qr_cell],
+        ["", Paragraph(visitor_id, vid_style)],
     ]
-
-    detail_table = Table(detail_data, colWidths=[5*cm, doc.width - 5*cm])
-    detail_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 11),
-        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#0F172A')),
-        ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#334155')),
+    visual_table = Table(visual_data, colWidths=[usable_w * 0.5, usable_w * 0.5])
+    visual_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('LINEBELOW', (0, 0), (-1, -2), 0.5, colors.HexColor('#E2E8F0')),
-        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.HexColor('#0F172A')),
+        ('TOPPADDING', (0, 0), (-1, -1), 2*mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f0f7ff')),
+        ('BOX', (0, 0), (-1, -1), 1, border_gray),
+        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+        ('RIGHTPADDING', (-1, 0), (-1, -1), 15*mm),
     ]))
-    elements.append(detail_table)
-    elements.append(Spacer(1, 10*mm))
+    elements.append(visual_table)
+    elements.append(Spacer(1, 4*mm))
 
-    # Footer
-    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=colors.HexColor('#94A3B8'), alignment=TA_CENTER)
-    elements.append(Paragraph("This is a computer-generated visitor pass. Please return this pass at the security gate upon exit.", footer_style))
-    elements.append(Paragraph(f"Generated: {datetime.now(timezone.utc).isoformat()}", footer_style))
+    # ── Authorization & Signatures ──
+    sig_label = ParagraphStyle('SigLabel', fontName='Helvetica-Bold', fontSize=9, textColor=dark, leading=12)
+    sig_sect_data = [[Paragraph("Authorization &amp; Records", sect_style)]]
+    sig_sect_table = Table(sig_sect_data, colWidths=[usable_w])
+    sig_sect_table.setStyle(TableStyle([
+        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+        ('LINEBELOW', (0, 0), (-1, -1), 1.5, orange),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
+    ]))
+    elements.append(sig_sect_table)
+    elements.append(Spacer(1, 2*mm))
+
+    out_time_str = visitor.get("out_time", "")
+    try:
+        if out_time_str:
+            out_dt = datetime.fromisoformat(out_time_str)
+            out_display = out_dt.strftime("%d %b %Y, %I:%M %p")
+        else:
+            out_display = ""
+    except Exception:
+        out_display = out_time_str or ""
+
+    sig_data = [
+        [Paragraph("Visitor Signature", sig_label), ""],
+        [Paragraph("Security Personnel Signature", sig_label), ""],
+        [Paragraph("Gate Out Time", sig_label), Paragraph(out_display, value_style)],
+    ]
+    sig_table = Table(sig_data, colWidths=[usable_w * 0.4, usable_w * 0.6])
+    sig_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+        ('TOPPADDING', (0, 0), (-1, -1), 5*mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5*mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+        ('BACKGROUND', (0, 0), (0, -1), light_blue),
+        ('BACKGROUND', (1, 0), (1, -1), light_gray),
+    ]))
+    elements.append(sig_table)
+    elements.append(Spacer(1, 4*mm))
+
+    # ── Instructions ──
+    instr_title = ParagraphStyle('InstrTitle', fontName='Helvetica-Bold', fontSize=10, textColor=dark, leading=14, spaceBefore=2*mm)
+    instr_style = ParagraphStyle('Instr', fontName='Helvetica', fontSize=8, textColor=colors.HexColor('#555555'), leading=12, leftIndent=5*mm)
+
+    instructions = [
+        "This pass must be worn visibly on your chest at all times.",
+        "Do not share or transfer this pass to any other person.",
+        "In case of emergency, follow all security personnel instructions.",
+        "Do not enter areas marked as 'Restricted Access'.",
+        "Return this pass to the security gate upon exit.",
+    ]
+    instr_items = [[Paragraph("Important Instructions", instr_title)]]
+    for i, inst in enumerate(instructions):
+        instr_items.append([Paragraph(f"{i+1}. {inst}", instr_style)])
+
+    instr_table = Table(instr_items, colWidths=[usable_w])
+    instr_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fff8e1')),
+        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10*mm),
+        ('TOPPADDING', (0, 0), (0, 0), 3*mm),
+        ('BOTTOMPADDING', (0, -1), (0, -1), 3*mm),
+        ('LINEBELOW', (0, -1), (-1, -1), 0, white),
+    ]))
+    elements.append(instr_table)
+    elements.append(Spacer(1, 3*mm))
+
+    # ── Footer ──
+    footer_style = ParagraphStyle('Footer', fontName='Helvetica', fontSize=7, textColor=colors.HexColor('#999999'), alignment=TA_CENTER, leading=10)
+    elements.append(Paragraph("King Group | kinggroup.in | Visitor Management System", footer_style))
+    elements.append(Paragraph(f"Pass generated: {datetime.now(timezone.utc).strftime('%d %b %Y, %I:%M %p UTC')}", footer_style))
 
     doc.build(elements)
     buf.seek(0)
@@ -438,7 +611,7 @@ async def get_visitor_slip(visitor_id: str):
     return StreamingResponse(
         buf,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename=visitor_slip_{visitor_id}.pdf"}
+        headers={"Content-Disposition": f"inline; filename=gatepass_{visitor_id}.pdf"}
     )
 
 # ── Stats ──
