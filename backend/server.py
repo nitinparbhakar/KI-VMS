@@ -88,6 +88,83 @@ class CheckInRequest(BaseModel):
 class CheckOutRequest(BaseModel):
     visitor_id: str
 
+class BlacklistCreate(BaseModel):
+    phone: str
+    name: str = ""
+    reason: str = ""
+
+class BlacklistUpdate(BaseModel):
+    reason: Optional[str] = None
+    active: Optional[bool] = None
+
+# ── Phone Lookup (returning visitor) ──
+@api_router.get("/visitors/lookup")
+async def lookup_visitor_by_phone(phone: str):
+    normalized = normalize_phone(phone)
+    # Check blacklist first
+    blacklisted = await db.blacklist.find_one({"phone": normalized, "active": True}, {"_id": 0})
+    if blacklisted:
+        return {"found": False, "blacklisted": True, "blacklist_reason": blacklisted.get("reason", ""), "blacklist_name": blacklisted.get("name", "")}
+
+    visits = await db.visitors.find(
+        {"phone": normalized},
+        {"_id": 0, "photo": 0}
+    ).sort("in_time", -1).to_list(100)
+
+    if not visits:
+        return {"found": False, "blacklisted": False, "visits": []}
+
+    latest = visits[0]
+    return {
+        "found": True,
+        "blacklisted": False,
+        "name": latest.get("name", ""),
+        "company": latest.get("company", ""),
+        "visit_count": len(visits),
+        "visits": visits
+    }
+
+# ── Blacklist Routes ──
+@api_router.get("/blacklist")
+async def get_blacklist():
+    items = await db.blacklist.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return {"blacklist": items}
+
+@api_router.post("/blacklist")
+async def add_to_blacklist(req: BlacklistCreate):
+    normalized = normalize_phone(req.phone)
+    existing = await db.blacklist.find_one({"phone": normalized})
+    if existing:
+        await db.blacklist.update_one({"phone": normalized}, {"$set": {"active": True, "reason": req.reason, "name": req.name}})
+        return {"message": "Blacklist entry updated"}
+    entry = {
+        "id": str(ObjectId()),
+        "phone": normalized,
+        "name": req.name,
+        "reason": req.reason,
+        "active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.blacklist.insert_one(entry)
+    await log_audit("BLACKLIST_ADD", "", f"Phone {normalized} ({req.name}) blacklisted: {req.reason}")
+    return {"message": "Added to blacklist", "entry": {k: v for k, v in entry.items() if k != "_id"}}
+
+@api_router.put("/blacklist/{item_id}")
+async def update_blacklist(item_id: str, update: BlacklistUpdate):
+    update_data = {k: v for k, v in update.model_dump().items() if v is not None}
+    result = await db.blacklist.update_one({"id": item_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Blacklist entry not found")
+    return {"message": "Blacklist entry updated"}
+
+@api_router.delete("/blacklist/{item_id}")
+async def remove_from_blacklist(item_id: str):
+    result = await db.blacklist.delete_one({"id": item_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Blacklist entry not found")
+    await log_audit("BLACKLIST_REMOVE", "", f"Blacklist entry {item_id} removed")
+    return {"message": "Removed from blacklist"}
+
 # ── Department Routes ──
 DEPARTMENTS = [
     "HR", "Accounts", "IT", "Shipping", "Marketing",
