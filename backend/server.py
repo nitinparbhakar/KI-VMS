@@ -351,8 +351,8 @@ async def get_visitor_slip(visitor_id: str):
 
     PAGE_W, PAGE_H = A4
     buf = io.BytesIO()
-    margin = 15*mm
-    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=10*mm, bottomMargin=10*mm, leftMargin=margin, rightMargin=margin)
+    margin = 12*mm
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=6*mm, bottomMargin=6*mm, leftMargin=margin, rightMargin=margin)
     elements = []
 
     navy = colors.HexColor('#003366')
