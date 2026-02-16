@@ -387,8 +387,11 @@ async def get_email_log():
 @api_router.post("/seed")
 async def seed_data():
     existing = await db.hosts.count_documents({})
-    if existing > 0:
+    if existing >= 17:
         return {"message": "Data already seeded", "hosts_count": existing}
+    if existing > 0:
+        await db.hosts.drop()
+
 
     hosts = [
         {"id": str(ObjectId()), "name": "Rajesh Kumar", "email": "rajesh@kinggroup.in", "department": "HR", "phone": "+919876543210", "active": True, "created_at": datetime.now(timezone.utc).isoformat()},
