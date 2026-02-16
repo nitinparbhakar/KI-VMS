@@ -545,7 +545,7 @@ async def get_visitor_slip(visitor_id: str):
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
     ]))
     elements.append(sig_sect_table)
-    elements.append(Spacer(1, 2*mm))
+    elements.append(Spacer(1, 1*mm))
 
     out_time_str = visitor.get("out_time", "")
     try:
