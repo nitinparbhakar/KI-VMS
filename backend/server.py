@@ -405,7 +405,7 @@ async def get_visitor_slip(visitor_id: str):
         [Paragraph("GATE PASS", title_style)],
         [Paragraph(f"ID: {visitor_id}", pass_num_style)]
     ]
-    title_table = Table(title_table_data, colWidths=[PAGE_W])
+    title_table = Table(title_table_data, colWidths=[usable_w])
     title_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f7fa')),
