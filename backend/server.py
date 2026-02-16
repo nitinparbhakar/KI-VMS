@@ -579,7 +579,7 @@ async def get_visitor_slip(visitor_id: str):
     instr_style = ParagraphStyle('Instr', fontName='Helvetica', fontSize=8, textColor=colors.HexColor('#555555'), leading=12, leftIndent=5*mm)
 
     instructions = [
-        "This pass must be worn visibly on your chest at all times.",
+        "Keep this pass with you during your visit.",
         "Do not share or transfer this pass to any other person.",
         "In case of emergency, follow all security personnel instructions.",
         "Do not enter areas marked as 'Restricted Access'.",
