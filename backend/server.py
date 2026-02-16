@@ -115,8 +115,8 @@ async def create_host(host: HostCreate):
     host_dict = host.model_dump()
     host_dict["id"] = str(ObjectId())
     host_dict["created_at"] = datetime.now(timezone.utc).isoformat()
-    await db.hosts.insert_one({**host_dict, "_id": ObjectId(host_dict["id"])})
-    del host_dict["_id"] if "_id" in host_dict else None
+    doc = {**host_dict}
+    await db.hosts.insert_one(doc)
     return {"host": host_dict}
 
 @api_router.put("/hosts/{host_id}")
