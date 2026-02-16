@@ -351,7 +351,8 @@ async def get_visitor_slip(visitor_id: str):
 
     PAGE_W, PAGE_H = A4
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=0, bottomMargin=0, leftMargin=0, rightMargin=0)
+    margin = 15*mm
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=10*mm, bottomMargin=10*mm, leftMargin=margin, rightMargin=margin)
     elements = []
 
     navy = colors.HexColor('#003366')
@@ -363,7 +364,7 @@ async def get_visitor_slip(visitor_id: str):
     light_gray = colors.HexColor('#fafafa')
     border_gray = colors.HexColor('#e0e0e0')
 
-    usable_w = PAGE_W - 40*mm
+    usable_w = PAGE_W - 2 * margin
 
     # ── Header with Logo ──
     logo_path = ROOT_DIR / "king_logo.png"
