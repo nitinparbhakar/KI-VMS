@@ -573,11 +573,11 @@ async def get_visitor_slip(visitor_id: str):
         ('BACKGROUND', (1, 0), (1, -1), light_gray),
     ]))
     elements.append(sig_table)
-    elements.append(Spacer(1, 4*mm))
+    elements.append(Spacer(1, 2*mm))
 
     # ── Instructions ──
-    instr_title = ParagraphStyle('InstrTitle', fontName='Helvetica-Bold', fontSize=10, textColor=dark, leading=14, spaceBefore=2*mm)
-    instr_style = ParagraphStyle('Instr', fontName='Helvetica', fontSize=8, textColor=colors.HexColor('#555555'), leading=12, leftIndent=5*mm)
+    instr_title = ParagraphStyle('InstrTitle', fontName='Helvetica-Bold', fontSize=9, textColor=dark, leading=12, spaceBefore=1*mm)
+    instr_style = ParagraphStyle('Instr', fontName='Helvetica', fontSize=7, textColor=colors.HexColor('#555555'), leading=10, leftIndent=4*mm)
 
     instructions = [
         "Keep this pass with you during your visit.",
