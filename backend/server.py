@@ -220,6 +220,11 @@ async def checkin_visitor(req: CheckInRequest):
     visitor_id = await get_next_visitor_id()
     normalized_phone = normalize_phone(req.phone)
 
+    # Check blacklist
+    blacklisted = await db.blacklist.find_one({"phone": normalized_phone, "active": True})
+    if blacklisted:
+        raise HTTPException(status_code=403, detail=f"This visitor is BLACKLISTED. Reason: {blacklisted.get('reason', 'No reason specified')}")
+
     # Check for returning visitor
     prev = await db.visitors.find(
         {"phone": normalized_phone},
