@@ -1,0 +1,140 @@
+{
+  "identity": {
+    "name": "King Group Visitor Management System",
+    "tone": "Industrial, Professional, Secure, Efficient",
+    "persona": "The 'Performance Pro' Guard - clarity, speed, large touch targets",
+    "theme_mode": "light",
+    "primary_archetype": "ARCHETYPE 4: SWISS & HIGH-CONTRAST (Authority, Clarity)",
+    "secondary_archetype": "ARCHETYPE 2: THE PERFORMANCE PRO (Tactical)"
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Chivo, sans-serif",
+      "body": "IBM Plex Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "imports": [
+      "@import url('https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;700;900&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');"
+    ],
+    "rules": {
+      "headings": "font-heading font-black tracking-tight text-slate-900 uppercase",
+      "subheadings": "font-body font-medium tracking-wide text-slate-500 uppercase text-xs",
+      "body": "font-body text-slate-700 leading-relaxed",
+      "labels": "font-body font-semibold text-slate-900 text-sm"
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#0F172A",
+        "foreground": "#F8FAFC",
+        "hover": "#1E293B"
+      },
+      "secondary": {
+        "DEFAULT": "#F1F5F9",
+        "foreground": "#0F172A",
+        "hover": "#E2E8F0"
+      },
+      "accent": {
+        "DEFAULT": "#2563EB",
+        "foreground": "#FFFFFF",
+        "glow": "0 0 20px rgba(37, 99, 235, 0.5)"
+      },
+      "success": {
+        "DEFAULT": "#059669",
+        "foreground": "#FFFFFF"
+      },
+      "destructive": {
+        "DEFAULT": "#DC2626",
+        "foreground": "#FFFFFF"
+      },
+      "background": "#F8FAFC",
+      "surface": "#FFFFFF",
+      "border": "#E2E8F0"
+    },
+    "gradients": {
+      "header": "bg-gradient-to-r from-slate-900 to-slate-800",
+      "card_hover": "hover:bg-slate-50",
+      "active_item": "bg-blue-50 border-l-4 border-blue-600"
+    }
+  },
+  "layout_strategies": {
+    "container": "w-full max-w-[1920px] mx-auto",
+    "spacing": {
+      "section_gap": "gap-8",
+      "card_padding": "p-6 md:p-8",
+      "touch_target": "min-h-[64px] min-w-[64px]"
+    },
+    "grids": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6",
+      "form_layout": "grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-80px)]"
+    }
+  },
+  "component_rules": {
+    "buttons": {
+      "primary": "h-14 px-8 text-lg font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-slate-900/20 transition-all active:scale-95",
+      "secondary": "h-14 px-8 text-lg font-semibold rounded-lg bg-white border-2 border-slate-200 text-slate-900 hover:border-slate-400 hover:bg-slate-50 transition-all",
+      "large_action": "h-32 w-full flex flex-col items-center justify-center gap-3 text-xl font-black rounded-xl border-2 border-transparent hover:border-primary/20 hover:shadow-xl transition-all"
+    },
+    "inputs": {
+      "default": "h-14 px-4 text-lg bg-white border-2 border-slate-200 rounded-lg focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-400",
+      "search": "h-16 text-xl pl-12 bg-white shadow-md border-0 ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 rounded-full"
+    },
+    "cards": {
+      "dashboard": "bg-white rounded-xl border border-slate-100 shadow-sm p-6 hover:shadow-md transition-shadow",
+      "visitor_slip": "bg-white border-2 border-slate-900 p-8 rounded-none w-[210mm] min-h-[297mm] shadow-2xl mx-auto"
+    },
+    "status_badges": {
+      "in": "bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-emerald-200",
+      "out": "bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-slate-200"
+    }
+  },
+  "libraries": {
+    "camera": "react-webcam",
+    "pdf": "jspdf, html2canvas",
+    "icons": "lucide-react",
+    "notifications": "sonner",
+    "charts": "recharts",
+    "dates": "date-fns"
+  },
+  "motion": {
+    "page_transition": {
+      "initial": { "opacity": 0, "y": 10 },
+      "animate": { "opacity": 1, "y": 0 },
+      "exit": { "opacity": 0, "y": -10 },
+      "transition": { "duration": 0.3 }
+    },
+    "hover_lift": "hover:-translate-y-1 transition-transform duration-200"
+  },
+  "accessibility": {
+    "touch_targets": "Minimum 48x48px for all interactive elements",
+    "focus_ring": "focus:ring-4 focus:ring-blue-500/30 focus:outline-none",
+    "contrast": "Ensure text is slate-700 or darker on white backgrounds"
+  },
+  "image_urls": {
+    "logo_placeholder": "https://placehold.co/200x60/0F172A/FFF?text=KING+GROUP",
+    "default_avatar": "https://placehold.co/150x150/E2E8F0/64748B?text=No+Photo"
+  },
+  "visual_enhancers": {
+    "glass_panel": "bg-white/90 backdrop-blur-xl border border-white/20 shadow-xl",
+    "industrial_grid": "bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]",
+    "noise_texture": "before:absolute before:inset-0 before:bg-[url('/noise.png')] before:opacity-[0.03] before:pointer-events-none"
+  },
+  "instructions_to_main_agent": [
+    "1. SCAFFOLD: Build the layout using 'Split Screen' for Check-In (Camera Left, Form Right).",
+    "2. CAMERA: Use 'react-webcam' for the live camera feed. This is critical. Ensure it works on mobile/tablet browsers.",
+    "3. TOUCH: Make all buttons MASSIVE. This is for guards using tablets. No tiny links.",
+    "4. PDF: Create a hidden 'VisitorSlip' component that is rendered to canvas/PDF for printing.",
+    "5. DATA: Use simple JSON arrays for departments ('HR', 'Accounts', etc.) if backend isn't ready, but structure cascading dropdowns properly.",
+    "6. DASHBOARD: The 'Active Visitors' list must be the home screen's centerpiece.",
+    "7. NO AUTH: Do not build a login page. App starts directly at the Dashboard."
+  ],
+  "universal_guidelines": [
+    "Don't make generic centered layouts.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Use pill-shaped or sharp button styles with interaction animations.",
+    "Use Sonner for toasts.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports."
+  ]
+}
