@@ -506,7 +506,7 @@ async def get_visitor_slip(visitor_id: str):
         qr_buf = io.BytesIO()
         qr_pil.save(qr_buf, format="PNG")
         qr_buf.seek(0)
-        qr_img = Image(qr_buf, width=25*mm, height=25*mm)
+        qr_img = Image(qr_buf, width=22*mm, height=22*mm)
     except Exception as e:
         logger.error(f"QR error: {e}")
 
