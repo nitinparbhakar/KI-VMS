@@ -567,7 +567,7 @@ async def get_visitor_slip(visitor_id: str):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
         ('TOPPADDING', (0, 0), (-1, -1), 5*mm),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5*mm),
-        ('LEFTPADDING', (0, 0), (-1, -1), 15*mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3*mm),
         ('BACKGROUND', (0, 0), (0, -1), light_blue),
         ('BACKGROUND', (1, 0), (1, -1), light_gray),
     ]))
