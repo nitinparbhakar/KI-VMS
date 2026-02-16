@@ -14,6 +14,7 @@ export const api = {
   deleteHost: (id) => API.delete(`/hosts/${id}`),
 
   // Visitors
+  lookupPhone: (phone) => API.get("/visitors/lookup", { params: { phone } }),
   checkin: (data) => API.post("/visitors/checkin", data),
   checkout: (visitorId) => API.post("/visitors/checkout", { visitor_id: visitorId }),
   getActiveVisitors: () => API.get("/visitors/active"),
@@ -21,6 +22,12 @@ export const api = {
   getVisitor: (visitorId) => API.get(`/visitors/${visitorId}`),
   getVisitorPhoto: (visitorId) => API.get(`/visitors/${visitorId}/photo`),
   getVisitorSlipUrl: (visitorId) => `${BACKEND_URL}/api/visitors/${visitorId}/slip`,
+
+  // Blacklist
+  getBlacklist: () => API.get("/blacklist"),
+  addToBlacklist: (data) => API.post("/blacklist", data),
+  updateBlacklist: (id, data) => API.put(`/blacklist/${id}`, data),
+  removeFromBlacklist: (id) => API.delete(`/blacklist/${id}`),
 
   // Stats
   getStats: () => API.get("/stats"),
