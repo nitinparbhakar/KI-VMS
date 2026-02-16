@@ -599,7 +599,7 @@ async def get_visitor_slip(visitor_id: str):
         ('BOTTOMPADDING', (0, -1), (0, -1), 3*mm),
     ]))
     elements.append(instr_table)
-    elements.append(Spacer(1, 3*mm))
+    elements.append(Spacer(1, 2*mm))
 
     # ── Footer ──
     footer_style = ParagraphStyle('Footer', fontName='Helvetica', fontSize=7, textColor=colors.HexColor('#999999'), alignment=TA_CENTER, leading=10)
