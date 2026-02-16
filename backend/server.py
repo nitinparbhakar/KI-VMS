@@ -471,7 +471,7 @@ async def get_visitor_slip(visitor_id: str):
         ("Company/Organization", visitor.get("company", "N/A")),
         ("Purpose of Visit", visitor.get("purpose", "")),
     ])
-    elements.append(Spacer(1, 3*mm))
+    elements.append(Spacer(1, 2*mm))
 
     # ── Host Details ──
     make_section("Host Details", [
@@ -479,7 +479,7 @@ async def get_visitor_slip(visitor_id: str):
         ("Department", visitor.get("department", "")),
         ("Gate In Time", in_display),
     ])
-    elements.append(Spacer(1, 4*mm))
+    elements.append(Spacer(1, 2*mm))
 
     # ── Photo + QR Code side by side ──
     photo_img = None
@@ -493,7 +493,7 @@ async def get_visitor_slip(visitor_id: str):
             clean_buf_photo = io.BytesIO()
             pil_img.save(clean_buf_photo, format="PNG")
             clean_buf_photo.seek(0)
-            photo_img = Image(clean_buf_photo, width=30*mm, height=30*mm)
+            photo_img = Image(clean_buf_photo, width=25*mm, height=25*mm)
         except Exception as e:
             logger.error(f"Photo error: {e}")
 
@@ -506,7 +506,7 @@ async def get_visitor_slip(visitor_id: str):
         qr_buf = io.BytesIO()
         qr_pil.save(qr_buf, format="PNG")
         qr_buf.seek(0)
-        qr_img = Image(qr_buf, width=30*mm, height=30*mm)
+        qr_img = Image(qr_buf, width=25*mm, height=25*mm)
     except Exception as e:
         logger.error(f"QR error: {e}")
 
