@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Camera, RefreshCw, UserPlus, Building2, Phone, User, Briefcase, Target, Check, X, FileText, AlertTriangle, History, ShieldAlert } from "lucide-react";
 
 const PURPOSE_OPTIONS = ["Meeting", "Interview", "Delivery", "Vendor Visit", "Personal", "Audit", "Maintenance", "Other"];
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_workforce-entry-1/artifacts/tsvym70d_king_logo_9-removebg-preview.png";
+const LOGO_URL = "/logo.png";
 
 export default function CheckIn() {
   const webcamRef = useRef(null);
@@ -20,6 +20,8 @@ export default function CheckIn() {
   const [cameraReady, setCameraReady] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
   const [facingMode, setFacingMode] = useState("environment");
+  const [videoDevices, setVideoDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
   const [phoneLookup, setPhoneLookup] = useState(null); // { found, name, company, visits, blacklisted }
@@ -34,6 +36,29 @@ export default function CheckIn() {
     api.getDepartments().then(r => setDepartments(r.data.departments)).catch(() => {});
     // Focus phone input on mount
     setTimeout(() => phoneInputRef.current?.focus(), 300);
+
+    // Enumerate video devices to enable camera switching
+    const getDevices = async () => {
+      try {
+        // Request camera permission first so labels are available
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(d => d.kind === "videoinput");
+        setVideoDevices(cameras);
+        // Try to default to back camera
+        const backCamera = cameras.find(d =>
+          d.label.toLowerCase().includes("back") ||
+          d.label.toLowerCase().includes("rear") ||
+          d.label.toLowerCase().includes("environment")
+        );
+        if (backCamera) {
+          setSelectedDeviceId(backCamera.deviceId);
+        }
+      } catch (e) {
+        console.log("Camera enumeration failed:", e);
+      }
+    };
+    getDevices();
   }, []);
 
   useEffect(() => {
@@ -93,6 +118,13 @@ export default function CheckIn() {
 
   const toggleCamera = () => {
     setCameraReady(false);
+    if (videoDevices.length > 1) {
+      // Cycle through available cameras by device ID
+      const currentIndex = videoDevices.findIndex(d => d.deviceId === selectedDeviceId);
+      const nextIndex = (currentIndex + 1) % videoDevices.length;
+      setSelectedDeviceId(videoDevices[nextIndex].deviceId);
+    }
+    // Also toggle facingMode as fallback
     setFacingMode(prev => prev === "user" ? "environment" : "user");
   };
 
@@ -133,6 +165,7 @@ export default function CheckIn() {
     setPhoneEntered(false);
     setCameraReady(false);
     setFacingMode("environment");
+    setSelectedDeviceId(null);
     setTimeout(() => phoneInputRef.current?.focus(), 300);
   };
 
@@ -238,13 +271,23 @@ export default function CheckIn() {
                   />
                 ) : (
                   <Webcam
+                    key={selectedDeviceId || facingMode}
                     ref={webcamRef}
                     audio={false}
                     screenshotFormat="image/jpeg"
                     screenshotQuality={0.7}
-                    videoConstraints={{ facingMode: facingMode, width: 640, height: 480 }}
+                    videoConstraints={selectedDeviceId
+                      ? { deviceId: { exact: selectedDeviceId }, width: 640, height: 480 }
+                      : { facingMode: { ideal: facingMode }, width: 640, height: 480 }
+                    }
                     onUserMedia={() => setCameraReady(true)}
-                    onUserMediaError={() => toast.error("Camera access denied. Please allow camera.")}
+                    onUserMediaError={() => {
+                      toast.error("Camera access denied. Please allow camera.");
+                      // Fallback: clear deviceId and try facingMode
+                      if (selectedDeviceId) {
+                        setSelectedDeviceId(null);
+                      }
+                    }}
                     className="w-full h-full object-cover"
                     data-testid="camera-feed"
                   />
@@ -271,14 +314,17 @@ export default function CheckIn() {
                   </button>
                 ) : (
                   <>
-                    <button
-                      onClick={toggleCamera}
-                      data-testid="switch-camera-btn"
-                      className="h-14 w-14 flex items-center justify-center bg-white border-2 border-slate-200 text-slate-700 rounded-xl hover:border-slate-400 transition-all active:scale-95 flex-shrink-0"
-                      title={facingMode === "user" ? "Switch to back camera" : "Switch to front camera"}
-                    >
-                      <RefreshCw className="w-5 h-5" />
-                    </button>
+                    {videoDevices.length > 1 && (
+                      <button
+                        onClick={toggleCamera}
+                        data-testid="switch-camera-btn"
+                        className="h-14 px-4 flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-slate-700 rounded-xl hover:border-slate-400 transition-all active:scale-95 flex-shrink-0"
+                        title={facingMode === "user" ? "Switch to back camera" : "Switch to front camera"}
+                      >
+                        <RefreshCw className="w-5 h-5" />
+                        <span className="text-xs font-semibold hidden sm:inline">FLIP</span>
+                      </button>
+                    )}
                     <button
                       onClick={capturePhoto}
                       disabled={!cameraReady}
