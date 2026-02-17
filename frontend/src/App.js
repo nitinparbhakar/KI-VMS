@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route, NavLink, useLocation } from "react-router-dom";
-import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
-import { api } from "@/lib/api";
 import Dashboard from "@/pages/Dashboard";
 import CheckIn from "@/pages/CheckIn";
 import CheckOut from "@/pages/CheckOut";
@@ -48,9 +46,8 @@ function NavBar() {
 }
 
 function AppContent() {
-  useEffect(() => {
-    api.seed().catch(() => {});
-  }, []);
+  // Seed is now only called manually from Admin panel if needed
+  // Removed auto-seed to prevent data reset on every page refresh
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
