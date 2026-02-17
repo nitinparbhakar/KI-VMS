@@ -19,6 +19,7 @@ export default function CheckIn() {
   const [hosts, setHosts] = useState([]);
   const [cameraReady, setCameraReady] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState(null);
+  const [facingMode, setFacingMode] = useState("environment");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
   const [phoneLookup, setPhoneLookup] = useState(null); // { found, name, company, visits, blacklisted }
@@ -90,6 +91,11 @@ export default function CheckIn() {
 
   const retakePhoto = () => setCapturedPhoto(null);
 
+  const toggleCamera = () => {
+    setCameraReady(false);
+    setFacingMode(prev => prev === "user" ? "environment" : "user");
+  };
+
   const selectHost = (hostId) => {
     const host = hosts.find(h => h.id === hostId);
     if (host) {
@@ -126,6 +132,7 @@ export default function CheckIn() {
     setPhoneLookup(null);
     setPhoneEntered(false);
     setCameraReady(false);
+    setFacingMode("environment");
     setTimeout(() => phoneInputRef.current?.focus(), 300);
   };
 
@@ -235,7 +242,7 @@ export default function CheckIn() {
                     audio={false}
                     screenshotFormat="image/jpeg"
                     screenshotQuality={0.7}
-                    videoConstraints={{ facingMode: "user", width: 640, height: 480 }}
+                    videoConstraints={{ facingMode: facingMode, width: 640, height: 480 }}
                     onUserMedia={() => setCameraReady(true)}
                     onUserMediaError={() => toast.error("Camera access denied. Please allow camera.")}
                     className="w-full h-full object-cover"
@@ -263,15 +270,25 @@ export default function CheckIn() {
                     RETAKE
                   </button>
                 ) : (
-                  <button
-                    onClick={capturePhoto}
-                    disabled={!cameraReady}
-                    data-testid="capture-photo-btn"
-                    className="flex-1 h-14 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-xl font-heading font-bold text-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg shadow-blue-600/20"
-                  >
-                    <Camera className="w-5 h-5" />
-                    CAPTURE PHOTO
-                  </button>
+                  <>
+                    <button
+                      onClick={toggleCamera}
+                      data-testid="switch-camera-btn"
+                      className="h-14 w-14 flex items-center justify-center bg-white border-2 border-slate-200 text-slate-700 rounded-xl hover:border-slate-400 transition-all active:scale-95 flex-shrink-0"
+                      title={facingMode === "user" ? "Switch to back camera" : "Switch to front camera"}
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={capturePhoto}
+                      disabled={!cameraReady}
+                      data-testid="capture-photo-btn"
+                      className="flex-1 h-14 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-xl font-heading font-bold text-sm hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+                    >
+                      <Camera className="w-5 h-5" />
+                      CAPTURE PHOTO
+                    </button>
+                  </>
                 )}
               </div>
             </div>
