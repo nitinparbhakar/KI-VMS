@@ -181,7 +181,7 @@ export default function Admin() {
                       <button onClick={() => openEditHost(h)}>
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button onClick={() => deleteHost(h._id, h.name)}>
+                      <button onClick={() => deleteHost(h.id, h.name)}>
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </button>
                     </div>
