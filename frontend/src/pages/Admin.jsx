@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Settings, UserPlus, Users, Mail, ScrollText, Pencil, Trash2, Plus, X, Check, ShieldAlert, ShieldOff } from "lucide-react";
 
-const LOGO_URL = "https://customer-assets.emergentagent.com/job_workforce-entry-1/artifacts/tsvym70d_king_logo_9-removebg-preview.png";
+const LOGO_URL = "/logo.png";
 
 export default function Admin() {
 
