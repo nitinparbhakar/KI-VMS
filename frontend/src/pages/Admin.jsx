@@ -76,8 +76,8 @@ export default function Admin() {
     setSaving(true);
 
     try {
-      if (hostDialog?._id) {
-        await api.updateHost(hostDialog._id, hostForm);
+      if (hostDialog?.id) {
+        await api.updateHost(hostDialog.id, hostForm);
         toast.success("Host updated");
       } else {
         await api.createHost({ ...hostForm, active: true });
