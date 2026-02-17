@@ -169,7 +169,7 @@ export default function Admin() {
 
             <TableBody>
               {filteredHosts.map(h => (
-                <TableRow key={h._id}>
+                <TableRow key={h.id}>
                   <TableCell>{h.name}</TableCell>
                   <TableCell>{h.email}</TableCell>
                   <TableCell>{h.department}</TableCell>
